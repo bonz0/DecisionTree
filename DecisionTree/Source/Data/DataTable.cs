@@ -155,21 +155,24 @@ namespace DecisionTree.Source.Data
             return counts;
         }
 
-        public int DecideSplittingColumn()
+        public Tuple<int, string> DecideSplittingParams()
         {
-            // for each column:
-            //   get attribute counts for the column
-            //   for each attribute of the column:
-            //     prune the table for that attirbute and column
+            double minEntropy = double.MaxValue;
+            Tuple<int, string> columnAttributePair = null;
             for (int i = 0; i < ColumnCount - 1; i++)
             {
                 IDictionary<string, int> attributeCounts = GetAttributeCountsForColumn(i);
                 foreach (var attribute in attributeCounts.Keys)
                 {
                     var prunedTable = PruneTable(i, attribute);
+                    if (prunedTable.Entropy < minEntropy)
+                    {
+                        minEntropy = prunedTable.Entropy;
+                        columnAttributePair = new Tuple<int, string>(i, attribute);
+                    }
                 }
             }
-            return 0;
+            return columnAttributePair;
         }
 
         public override string ToString()
