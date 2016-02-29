@@ -39,6 +39,13 @@ namespace DecisionTree.Source.Data
             return data[index];
         }
 
+        public DataRow RemoveAttributeAt(int index)
+        {
+            var dataRow = new DataRow(this);
+            dataRow.data.RemoveAt(index);
+            return dataRow;
+        }
+
         public override string ToString()
         {
             return string.Join(",", data);

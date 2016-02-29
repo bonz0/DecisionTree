@@ -11,10 +11,28 @@ namespace DecisionTree.Source.Tree
     {
         DecisionTreeNode root;
 
-        public DecisionTreeNode buildDecisionTree(DataTable data)
+        public DecisionTreeNode BuildDecisionTree(DecisionTreeNode root, DataTable data)
         {
+            throw new NotImplementedException();
+
             if (data.IsEmpty)
             {
+                return null;
+            }
+            else if (data.IsHomogeneous)
+            {
+                root.ClassLabel = data.FirstClassLabel;
+                return root;
+            }
+            else
+            {
+                int splittingColumnIndex = data.DecideSplittingParams();
+                var attributeValueCounts = data.GetAttributeCountsForColumn(splittingColumnIndex);
+                foreach (var attribute in attributeValueCounts)
+                {
+                    var node = new DecisionTreeNode(data.GetColumnName(splittingColumnIndex));
+                    root.AddChild(attribute.Key, node);
+                }
                 return null;
             }
         }

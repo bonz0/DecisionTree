@@ -2,9 +2,6 @@
 using DecisionTree.Source.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Runner
 {
@@ -20,14 +17,27 @@ namespace Runner
             DataTable fbPrunedTable = dataTable.PruneTable("Network", "facebook");
             DataTable pcPrunedTable = dataTable.PruneTable("Laptop", "pc");
             DataTable macPrunedTable = dataTable.PruneTable("Laptop", "mac");
+            Console.WriteLine(nameof(dataTable));
             Console.WriteLine(dataTable.ToString());
+            Console.WriteLine(nameof(iPodPrunedTable));
             Console.WriteLine(iPodPrunedTable.ToString());
+            Console.WriteLine(nameof(iPhonePrunedTable));
             Console.WriteLine(iPhonePrunedTable.ToString());
+            Console.WriteLine(nameof(nonePrunedTable));
             Console.WriteLine(nonePrunedTable.ToString());
+            Console.WriteLine(nameof(twitterPrunedTable));
             Console.WriteLine(twitterPrunedTable.ToString());
+            Console.WriteLine(nameof(fbPrunedTable));
             Console.WriteLine(fbPrunedTable.ToString());
+            Console.WriteLine(nameof(pcPrunedTable));
             Console.WriteLine(pcPrunedTable.ToString());
+            Console.WriteLine(nameof(macPrunedTable));
             Console.WriteLine(macPrunedTable.ToString());
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine($"Split on: {dataTable.DecideSplittingParams()}");
             double[] entropies = new double[]
             {
                 dataTable.Entropy,

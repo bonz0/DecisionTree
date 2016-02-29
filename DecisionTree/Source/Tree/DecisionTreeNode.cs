@@ -6,26 +6,18 @@ using System.Threading.Tasks;
 
 namespace DecisionTree.Source.Tree
 {
-    internal class DecisionTreeNode
+    public class DecisionTreeNode
     {
         string splittingColumn;
-        string classLabel;
         Dictionary<string, DecisionTreeNode> children;
 
-        public DecisionTreeNode(string splittingColumn, string classLabel)
+        public DecisionTreeNode(string splittingColumn)
         {
             this.splittingColumn = splittingColumn;
-            this.classLabel = classLabel;
             this.children = new Dictionary<string, DecisionTreeNode>();
         }
 
-        public string ClassLabel
-        {
-            get
-            {
-                return classLabel;
-            }
-        }
+        public string ClassLabel { get; set; }
 
         public string SplittingColumn
         {
@@ -53,9 +45,9 @@ namespace DecisionTree.Source.Tree
             return children.ContainsKey(column);
         }
 
-        public void AddChild(string column, DecisionTreeNode childNode)
+        public void AddChild(string attributeValue, DecisionTreeNode childNode)
         {
-            this.children.Add(column, childNode);
+            this.children.Add(attributeValue, childNode);
         }
     }
 }

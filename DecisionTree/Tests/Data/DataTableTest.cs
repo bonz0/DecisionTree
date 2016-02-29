@@ -84,27 +84,73 @@ namespace DecisionTree.Tests.Data
         public void TestPruneTable()
         {
             DataTable dataTable = getSampleData();
-            DataTable prunedTable = dataTable.PruneTable("Network", "twitter");
 
-            Assert.AreEqual(6, dataTable.RowCount);
-            Assert.AreEqual(3, dataTable.ColumnCount);
-            Assert.IsFalse(dataTable.IsHomogeneous);
+            DataTable twitterTable = dataTable.PruneTable("Network", "twitter");
+            Assert.AreEqual(4, twitterTable.RowCount);
+            Assert.AreEqual(2, twitterTable.ColumnCount);
+            Assert.IsTrue(twitterTable.IsHomogeneous);
 
-            Assert.AreEqual(2, prunedTable.RowCount);
-            Assert.AreEqual(3, prunedTable.ColumnCount);
-            Assert.IsTrue(prunedTable.IsHomogeneous);
+            DataTable facebookTable = dataTable.PruneTable("Network", "facebook");
+            Assert.AreEqual(2, facebookTable.RowCount);
+            Assert.AreEqual(2, facebookTable.ColumnCount);
+            Assert.IsTrue(facebookTable.IsHomogeneous);
 
-            DataTable doublePrunedTable = prunedTable.PruneTable("Network", "facebook");
-            Assert.AreEqual(0, doublePrunedTable.RowCount);
-            Assert.AreEqual(2, doublePrunedTable.ColumnCount);
-            Assert.IsTrue(doublePrunedTable.IsHomogeneous);
+            try
+            {
+                DataTable twitterFacebookTable = twitterTable.PruneTable("Network", "facebook");
+                Assert.Fail();
+            }
+            catch (Exception e)
+            {
+                Assert.IsInstanceOfType(e, typeof(ArgumentOutOfRangeException));
+            }
+
+            DataTable ipodTable = dataTable.PruneTable(0, "ipod");
+            Assert.AreEqual(3, ipodTable.RowCount);
+            Assert.AreEqual(2, ipodTable.ColumnCount);
+            Assert.IsTrue(ipodTable.IsHomogeneous);
+
+            DataTable ipodTwitterTbale = twitterTable.PruneTable(0, "ipod");
+            Assert.AreEqual(3, ipodTwitterTbale.RowCount);
+            Assert.AreEqual(1, ipodTwitterTbale.ColumnCount);
+            Assert.IsTrue(ipodTwitterTbale.IsHomogeneous);
+
+            DataTable iPhoneTwitterTable = twitterTable.PruneTable(0, "iphone");
+            Assert.AreEqual(1, iPhoneTwitterTable.RowCount);
+            Assert.AreEqual(1, iPhoneTwitterTable.ColumnCount);
+            Assert.IsTrue(ipodTable.IsHomogeneous);
+        }
+
+        [TestMethod]
+        public void TestPruneTableBasedOnClass()
+        {
+            DataTable dataTable = getSampleData();
+            try
+            {
+                DataTable classPrunedTable = dataTable.PruneTable("Cool?", "no");
+                Assert.Fail();
+            }
+            catch (Exception e)
+            {
+                Assert.IsInstanceOfType(e, typeof(ArgumentException));
+            }
+
+            try
+            {
+                DataTable classPrunedTable = dataTable.PruneTable(dataTable.ColumnCount - 1, "no");
+                Assert.Fail();
+            }
+            catch (Exception e)
+            {
+                Assert.IsInstanceOfType(e, typeof(ArgumentException));
+            }
         }
 
         [TestMethod]
         public void TestClassCounts()
         {
             DataTable dataTable = getSampleData();
-            IDictionary<string, int> classCounts = dataTable.getClassCounts();
+            IDictionary<string, int> classCounts = dataTable.GetClassCounts();
             Assert.AreEqual(4, classCounts["no"]);
             Assert.AreEqual(2, classCounts["yes"]);
         }

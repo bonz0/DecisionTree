@@ -44,9 +44,12 @@
     <Compile Include="Source\Data\DataRow.cs" />
     <Compile Include="Source\Data\DataTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\Tree\DecisionTree.cs" />
+    <Compile Include="Source\Tree\DecisionTreeNode.cs" />
     <Compile Include="Source\Utils\FileInputParser.cs" />
     <Compile Include="Tests\Data\DataRowTest.cs" />
     <Compile Include="Tests\Data\DataTableTest.cs" />
+    <Compile Include="Tests\Utils\FileInputParserTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

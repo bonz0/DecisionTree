@@ -1,5 +1,4 @@
-﻿
-namespace DecisionTree.Source.Data
+﻿namespace DecisionTree.Source.Data
 {
     #region Usings
     using System;
@@ -11,14 +10,14 @@ namespace DecisionTree.Source.Data
     /// <summary>
     /// 
     /// DataTable:
-    /// |-------------|
-    /// | columnNames | 
-    /// |             |-----------|
-    /// | col1 | col2 | className |
     /// |-------------------------|
-    /// | val1   valA   class1    | -> DataRow
+    /// | col1 | col2 | className | -> columnNames
     /// |-------------------------|
-    /// | val2   valB   class2    | -> DataRow
+    /// | val1 | valA | class1    | -> DataRow
+    /// |-------------------------|
+    /// | val2 | valB | class2    | -> DataRow
+    /// |-------------------------|
+    /// | val1 | valB | class2    | -> DataRow
     /// |-------------------------|
     /// </summary>
     public class DataTable
@@ -33,7 +32,7 @@ namespace DecisionTree.Source.Data
             validateArgs(columnNames.Count, dataRows);
             this.columnNames = columnNames;
             this.dataRows = dataRows;
-            this.entropy = calculateEntropy();
+            this.entropy = calculateTableEntropy();
         }
 
         public DataTable(IList<string> columnNames, IList<string[]> dataRows)
@@ -44,7 +43,7 @@ namespace DecisionTree.Source.Data
             {
                 this.dataRows.Add(new DataRow(d));
             }
-            this.entropy = calculateEntropy();
+            this.entropy = calculateTableEntropy();
             validateArgs(this.columnNames.Count, this.dataRows);
         }
         #endregion
@@ -107,7 +106,7 @@ namespace DecisionTree.Source.Data
                 {
                     return true;
                 }
-                string firstClass = dataRows[0].ClassLabel;
+                var firstClass = dataRows[0].ClassLabel;
                 return dataRows.All(d => d.ClassLabel.Equals(firstClass));
             }
         }
@@ -122,29 +121,49 @@ namespace DecisionTree.Source.Data
                 return RowCount == 0;
             }
         }
+
+        public string FirstClassLabel
+        {
+            get
+            {
+                return dataRows.First().ClassLabel;
+            }
+        }
         #endregion
 
         #region PublicMethods
+        public string GetColumnName(int columnIndex)
+        {
+            return columnNames[columnIndex];
+        }
+
         public DataTable PruneTable(string columnName, string attributeValue)
         {
-            int columnIndex = columnNames.IndexOf(columnName);
+            var columnIndex = columnNames.IndexOf(columnName);
             return PruneTable(columnIndex, attributeValue);
         }
 
         public DataTable PruneTable(int columnIndex, string attributeValue)
         {
-            IList<string> clonedColumns = new List<string>(columnNames);
-            IList<DataRow> prunedData = dataRows
-                .Where(r => !r.GetAttributeAtIndex(columnIndex).Equals(attributeValue))
-                .ToList();
-            if (prunedData.Count == 0)
+            if (columnIndex == ColumnCount - 1)
             {
-                clonedColumns.RemoveAt(columnIndex);
+                throw new ArgumentException("Cannot prune DataTable based on the class.");
             }
+            var clonedColumns = new List<string>(columnNames);
+            clonedColumns.RemoveAt(columnIndex);
+            var prunedData = dataRows
+                .Where(r => r.GetAttributeAtIndex(columnIndex).Equals(attributeValue))
+                .Select(d => d.RemoveAttributeAt(columnIndex))
+                .ToList();
             return new DataTable(clonedColumns, prunedData);
         }
 
-        internal IDictionary<string, int> GetAttributeCountsForColumn(int columnIndex)
+        public IDictionary<string, int> GetClassCounts()
+        {
+            return GetAttributeCountsForColumn(ColumnCount - 1);
+        }
+
+        public IDictionary<string, int> GetAttributeCountsForColumn(int columnIndex)
         {
             var counts = new Dictionary<string, int>();
             foreach (var d in dataRows)
@@ -155,29 +174,35 @@ namespace DecisionTree.Source.Data
             return counts;
         }
 
-        public Tuple<int, string> DecideSplittingParams()
+        public int DecideSplittingParams()
         {
-            double minEntropy = double.MaxValue;
-            Tuple<int, string> columnAttributePair = null;
+            var minEntropy = double.MaxValue;
+            var splittingColumn = 0;
             for (int i = 0; i < ColumnCount - 1; i++)
             {
-                IDictionary<string, int> attributeCounts = GetAttributeCountsForColumn(i);
+                var attributeCounts = GetAttributeCountsForColumn(i);
+                double columnEntropy = 0.0d;
                 foreach (var attribute in attributeCounts.Keys)
                 {
                     var prunedTable = PruneTable(i, attribute);
-                    if (prunedTable.Entropy < minEntropy)
-                    {
-                        minEntropy = prunedTable.Entropy;
-                        columnAttributePair = new Tuple<int, string>(i, attribute);
-                    }
+                    var prunedTableEntropy = prunedTable.Entropy;
+                    var attributeCount = (double)attributeCounts[attribute];
+                    var sizeOfCurrentTable = (double)RowCount;
+                    columnEntropy += (attributeCount / sizeOfCurrentTable) * prunedTableEntropy;
+                }
+
+                if (columnEntropy < minEntropy)
+                {
+                    minEntropy = columnEntropy;
+                    splittingColumn = i;
                 }
             }
-            return columnAttributePair;
+            return splittingColumn;
         }
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine(string.Join(",", columnNames));
             foreach (var dataRow in dataRows)
             {
@@ -189,7 +214,7 @@ namespace DecisionTree.Source.Data
 
         public override bool Equals(object obj)
         {
-            DataTable other = obj as DataTable;
+            var other = obj as DataTable;
 
             if (other == null)
             {
@@ -202,7 +227,7 @@ namespace DecisionTree.Source.Data
 
         public override int GetHashCode()
         {
-            int hash = 19;
+            var hash = 19;
             foreach (var c in columnNames)
             {
                 hash = hash * 31 + c.GetHashCode();
@@ -216,11 +241,6 @@ namespace DecisionTree.Source.Data
         #endregion
 
         #region PrivateMethods
-        internal IDictionary<string, int> getClassCounts()
-        {
-            return GetAttributeCountsForColumn(ColumnCount - 1);
-        }
-
         private void validateArgs(int numColumns, IEnumerable<DataRow> dataRows)
         {
             if (dataRows.Any(d => d.Count != numColumns))
@@ -229,25 +249,15 @@ namespace DecisionTree.Source.Data
             }
         }
 
-        internal bool isColumnHomogeneous(int columnIndex)
+        private double calculateTableEntropy()
         {
-            if (dataRows.Count == 0)
-            {
-                return true;
-            } 
-            string attribute = dataRows[0].GetAttributeAtIndex(columnIndex);
-            return dataRows.All(d => attribute.Equals(d.GetAttributeAtIndex(columnIndex)));
-        }
-
-        private double calculateEntropy()
-        {
-            double entropy = 0.0d;
-            IDictionary<string, int> classCounts = getClassCounts();
-            double size = (double)RowCount;
+            var entropy = 0.0d;
+            var classCounts = GetClassCounts();
+            var size = (double)RowCount;
             foreach (var c in classCounts)
             {
-                double fraction = (c.Value / size);
-                double logOfFraction = Math.Log(fraction, 2.0d);
+                var fraction = (c.Value / size);
+                var logOfFraction = Math.Log(fraction, 2.0d);
                 entropy -= (fraction * logOfFraction);
             }
             return entropy;
