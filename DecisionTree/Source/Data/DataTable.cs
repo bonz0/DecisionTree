@@ -60,6 +60,14 @@
             }
         }
 
+        public IList<string> ClassLabels
+        {
+            get
+            {
+                return dataRows.Select(d => d.ClassLabel).ToList();
+            }
+        }
+
         /// <summary>
         /// Gives the number of rows of data in the table.
         /// </summary>
@@ -129,6 +137,22 @@
                 return dataRows.First().ClassLabel;
             }
         }
+
+        internal IList<string> ColumnNames
+        {
+            get
+            {
+                return columnNames;
+            }
+        }
+
+        internal IList<DataRow> Data
+        {
+            get
+            {
+                return dataRows;
+            }
+        }
         #endregion
 
         #region PublicMethods
@@ -174,10 +198,10 @@
             return counts;
         }
 
-        public int DecideSplittingParams()
+        public Tuple<int, string> DecideSplittingParams()
         {
             var minEntropy = double.MaxValue;
-            var splittingColumn = 0;
+            Tuple<int, string> splittingColumn = null;
             for (int i = 0; i < ColumnCount - 1; i++)
             {
                 var attributeCounts = GetAttributeCountsForColumn(i);
@@ -191,10 +215,10 @@
                     columnEntropy += (attributeCount / sizeOfCurrentTable) * prunedTableEntropy;
                 }
 
-                if (columnEntropy < minEntropy)
+                if (columnEntropy <= minEntropy)
                 {
                     minEntropy = columnEntropy;
-                    splittingColumn = i;
+                    splittingColumn = new Tuple<int, string>(i, GetColumnName(i));
                 }
             }
             return splittingColumn;
@@ -203,7 +227,7 @@
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(string.Join(",", columnNames));
+            sb.AppendLine(string.Join("\t", columnNames));
             foreach (var dataRow in dataRows)
             {
                 sb.AppendLine(dataRow.ToString());

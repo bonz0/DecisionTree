@@ -48,7 +48,7 @@ namespace DecisionTree.Source.Data
 
         public override string ToString()
         {
-            return string.Join(",", data);
+            return string.Join("\t", data);
         }
 
         public override bool Equals(object obj)
