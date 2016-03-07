@@ -49,7 +49,3 @@ leisurely,soup,no,4-8,>8,rainy,cold,W,happy,Buck-I-Mart
 quick,other,yes,0,1-3,rainy,mild,W,grumpy,Buck-I-Mart
 quick,other,yes,0,>8,sunny,hot,T,busy,Buck-I-Mart
 medium,sandwich,yes,>8,>8,rainy,cold,F,happy,Brennan's
-#IsHeavy,IsSmelly,IsSpotted,IsSmooth,IsPoisonous
-#1,1,1,1,0
-#0,1,0,1,0
-#1,1,0,0,1
