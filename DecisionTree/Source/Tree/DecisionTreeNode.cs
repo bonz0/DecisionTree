@@ -55,7 +55,7 @@ namespace DecisionTree.Source.Tree
         {
             get
             {
-                return splitDetails.Item1;
+                return splitDetails.DimensionIndex;
             }
         }
 
