@@ -11,7 +11,7 @@
     /// 
     /// DataTable:
     /// |-------------------------|
-    /// | col1 | col2 | className | -> columnNames
+    /// | dim1 | dim2 | className | -> dimensions
     /// |-------------------------|
     /// | val1 | valA | class1    | -> DataRow
     /// |-------------------------|
@@ -22,29 +22,29 @@
     /// </summary>
     public class DataTable
     {
-        private readonly IList<string> columnNames;
+        private readonly IList<string> dimensions;
         private readonly IList<DataRow> dataRows;
         private readonly double entropy;
 
         #region Ctors
-        public DataTable(IList<string> columnNames, IList<DataRow> dataRows)
+        public DataTable(IList<string> dimensions, IList<DataRow> dataRows)
         {
-            validateArgs(columnNames.Count, dataRows);
-            this.columnNames = columnNames;
+            validateArgs(dimensions.Count, dataRows);
+            this.dimensions = dimensions;
             this.dataRows = dataRows;
             this.entropy = calculateTableEntropy();
         }
 
-        public DataTable(IList<string> columnNames, IList<string[]> dataRows)
+        public DataTable(IList<string> dimensions, IList<string[]> dataRows)
         {
-            this.columnNames = columnNames;
+            this.dimensions = dimensions;
             this.dataRows = new List<DataRow>();
             foreach (var d in dataRows)
             {
                 this.dataRows.Add(new DataRow(d));
             }
             this.entropy = calculateTableEntropy();
-            validateArgs(this.columnNames.Count, this.dataRows);
+            validateArgs(this.dimensions.Count, this.dataRows);
         }
         #endregion
 
@@ -52,15 +52,15 @@
         /// <summary>
         /// Gives the number of columns in the table (including the class label).
         /// </summary>
-        public int ColumnCount
+        internal int DimensionCount
         {
             get
             {
-                return columnNames.Count;
+                return dimensions.Count;
             }
         }
 
-        public IList<string> ClassLabels
+        internal IList<string> ClassLabels
         {
             get
             {
@@ -71,7 +71,7 @@
         /// <summary>
         /// Gives the number of rows of data in the table.
         /// </summary>
-        public int RowCount
+        internal int DataCount
         {
             get
             {
@@ -82,11 +82,11 @@
         /// <summary>
         /// The name of the class to predict.
         /// </summary>
-        public string ClassName
+        internal string ClassName
         {
             get
             {
-                return columnNames.Last();
+                return dimensions.Last();
             }
         }
 
@@ -95,7 +95,7 @@
         /// The entropy of a homogeneous table is 0.0.
         /// The entropy of an evenly split table is 1.0.
         /// </summary>
-        public double Entropy
+        internal double Entropy
         {
             get
             {
@@ -106,15 +106,15 @@
         /// <summary>
         /// Determines if all the data rows of the table have the same class label.
         /// </summary>
-        public bool IsHomogeneous
+        internal bool IsHomogeneous
         {
             get
             {
-                if (RowCount == 0)
+                if (DataCount == 0)
                 {
                     return true;
                 }
-                var firstClass = dataRows[0].ClassLabel;
+                var firstClass = dataRows.First().ClassLabel;
                 return dataRows.All(d => d.ClassLabel.Equals(firstClass));
             }
         }
@@ -122,15 +122,15 @@
         /// <summary>
         /// Determines if the data table is empty
         /// </summary>
-        public bool IsEmpty
+        internal bool IsEmpty
         {
             get
             {
-                return RowCount == 0;
+                return DataCount == 0;
             }
         }
 
-        public string FirstClassLabel
+        internal string FirstClassLabel
         {
             get
             {
@@ -138,11 +138,11 @@
             }
         }
 
-        internal IList<string> ColumnNames
+        internal IList<string> Dimensions
         {
             get
             {
-                return columnNames;
+                return dimensions;
             }
         }
 
@@ -156,78 +156,85 @@
         #endregion
 
         #region PublicMethods
-        public string GetColumnName(int columnIndex)
+        internal string GetDimension(int dimensionIndex)
         {
-            return columnNames[columnIndex];
+            return dimensions[dimensionIndex];
         }
 
-        public DataTable PruneTable(string columnName, string attributeValue)
+        internal DataTable PruneTable(string dimension, string value)
         {
-            var columnIndex = columnNames.IndexOf(columnName);
-            return PruneTable(columnIndex, attributeValue);
+            var columnIndex = dimensions.IndexOf(dimension);
+            return Split(columnIndex, value);
         }
 
-        public DataTable PruneTable(int columnIndex, string attributeValue)
+        internal DataTable Split(int dimensionIndex, string value)
         {
-            if (columnIndex == ColumnCount - 1)
+            if (dimensionIndex == DimensionCount - 1)
             {
                 throw new ArgumentException("Cannot prune DataTable based on the class.");
             }
-            var clonedColumns = new List<string>(columnNames);
-            clonedColumns.RemoveAt(columnIndex);
-            var prunedData = dataRows
-                .Where(r => r.GetAttributeAtIndex(columnIndex).Equals(attributeValue))
-                .Select(d => d.RemoveAttributeAt(columnIndex))
+            var dataWithValue = dataRows
+                .Where(r => r.GetValueAtIndex(dimensionIndex).Equals(value))
+                .Select(d => d.RemoveAttributeAt(dimensionIndex))
                 .ToList();
-            return new DataTable(clonedColumns, prunedData);
+
+            var clonedDimensions = new List<string>(dimensions);
+            clonedDimensions.RemoveAt(dimensionIndex);
+            return new DataTable(clonedDimensions, dataWithValue);
         }
 
-        public IDictionary<string, int> GetClassCounts()
+        internal IDictionary<string, int> GetClassCounts()
         {
-            return GetAttributeCountsForColumn(ColumnCount - 1);
+            return GetValueCountsForDimension(DimensionCount - 1);
         }
 
-        public IDictionary<string, int> GetAttributeCountsForColumn(int columnIndex)
+        internal IDictionary<string, int> GetValueCountsForDimension(int columnIndex)
         {
             var counts = new Dictionary<string, int>();
             foreach (var d in dataRows)
             {
-                string attribute = d.GetAttributeAtIndex(columnIndex);
+                string attribute = d.GetValueAtIndex(columnIndex);
                 counts[attribute] = (counts.ContainsKey(attribute)) ? counts[attribute] + 1 : 1;
             }
             return counts;
         }
 
-        public Tuple<int, string> DecideSplittingParams()
+        internal SplitParams DecideSplitParams()
         {
-            var minEntropy = double.MaxValue;
-            Tuple<int, string> splittingColumn = null;
-            for (int i = 0; i < ColumnCount - 1; i++)
+            var minDimensionEntropy = double.MaxValue;
+            SplitParams splitParams = null;
+            for (int i = 0; i < DimensionCount - 1; i++)
             {
-                var attributeCounts = GetAttributeCountsForColumn(i);
-                double columnEntropy = 0.0d;
-                foreach (var attribute in attributeCounts.Keys)
+                var valueCounts = GetValueCountsForDimension(i);
+                var dimensionEntropy = 0.0d;
+                string minEntropyValue = null;
+                var minValueEntropy = double.MaxValue;
+                foreach (var value in valueCounts.Keys)
                 {
-                    var prunedTable = PruneTable(i, attribute);
+                    var prunedTable = Split(i, value);
                     var prunedTableEntropy = prunedTable.Entropy;
-                    var attributeCount = (double)attributeCounts[attribute];
-                    var sizeOfCurrentTable = (double)RowCount;
-                    columnEntropy += (attributeCount / sizeOfCurrentTable) * prunedTableEntropy;
+                    var valueCount = (double)valueCounts[value];
+                    var sizeOfCurrentTable = (double)DataCount;
+                    dimensionEntropy += (valueCount / sizeOfCurrentTable) * prunedTableEntropy;
+                    if (prunedTableEntropy < minValueEntropy)
+                    {
+                        minEntropyValue = value;
+                    }
                 }
 
-                if (columnEntropy <= minEntropy)
+                if (dimensionEntropy <= minDimensionEntropy)
                 {
-                    minEntropy = columnEntropy;
-                    splittingColumn = new Tuple<int, string>(i, GetColumnName(i));
+                    minDimensionEntropy = dimensionEntropy;
+                    splitParams = new SplitParams(i, GetDimension(i), minEntropyValue);
                 }
             }
-            return splittingColumn;
+            return splitParams;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(string.Join("\t", columnNames));
+            sb.AppendLine(string.Join("\t", dimensions));
             foreach (var dataRow in dataRows)
             {
                 sb.AppendLine(dataRow.ToString());
@@ -245,14 +252,14 @@
                 return false;
             }
 
-            return (columnNames.SequenceEqual(other.columnNames)
+            return (dimensions.SequenceEqual(other.dimensions)
                 && dataRows.SequenceEqual(other.dataRows));
         }
 
         public override int GetHashCode()
         {
             var hash = 19;
-            foreach (var c in columnNames)
+            foreach (var c in dimensions)
             {
                 hash = hash * 31 + c.GetHashCode();
             }
@@ -277,7 +284,7 @@
         {
             var entropy = 0.0d;
             var classCounts = GetClassCounts();
-            var size = (double)RowCount;
+            var size = (double)DataCount;
             foreach (var c in classCounts)
             {
                 var fraction = (c.Value / size);

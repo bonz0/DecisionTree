@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DecisionTree.Source.Data;
+using System;
 using System.Collections.Generic;
 
 namespace DecisionTree.Source.Tree
@@ -6,13 +7,13 @@ namespace DecisionTree.Source.Tree
     internal class DecisionTreeNode
     {
         private string classLabel;
-        private Tuple<int, string> splittingColumn;
+        private SplitParams splitDetails;
         Dictionary<string, DecisionTreeNode> children;
 
         public DecisionTreeNode()
         {
             this.children = new Dictionary<string, DecisionTreeNode>();
-            this.splittingColumn = null;
+            this.splitDetails = null;
             this.classLabel = null;
         }
 
@@ -29,32 +30,32 @@ namespace DecisionTree.Source.Tree
             }
         }
 
-        public Tuple<int, string> SplittingColumn
+        public SplitParams SplitDetails
         {
             private get
             {
-                return splittingColumn;
+                return splitDetails;
             }
 
             set
             {
-                splittingColumn = value;
+                splitDetails = value;
             }
         }
 
-        public string SplittingColumnName
+        public string SplitDimension
         {
             get
             {
-                return splittingColumn.Item2;
+                return splitDetails.Dimension;
             }
         }
 
-        public int SplittingColumnIndex
+        public int SplitDimensionIndex
         {
             get
             {
-                return splittingColumn.Item1;
+                return splitDetails.Item1;
             }
         }
 

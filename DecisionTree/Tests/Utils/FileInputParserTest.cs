@@ -16,8 +16,8 @@ namespace DecisionTree.Tests.Utils
             string rootDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Directory.GetCurrentDirectory()));
             string testDataPath = Path.Combine(rootDirectory, testDataRelativePath);
             DataTable testData = FileInputParser.ReadDataTableFromFile(testDataPath, ',');
-            Assert.AreEqual(4, testData.ColumnCount);
-            Assert.AreEqual(16, testData.RowCount);
+            Assert.AreEqual(4, testData.DimensionCount);
+            Assert.AreEqual(16, testData.DataCount);
             Assert.IsFalse(testData.IsHomogeneous);
             Assert.IsFalse(testData.IsEmpty);
             Assert.AreEqual("Cool?", testData.ClassName);

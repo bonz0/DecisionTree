@@ -24,6 +24,10 @@ namespace DecisionTree.Source.Tree
 
         public void Train(DataTable dataTable)
         {
+            if (dataTable == null)
+            {
+                throw new ArgumentNullException(nameof(dataTable));
+            }
             if (dataTable.IsEmpty)
             {
                 throw new ArgumentException("An empty DataTable cannot be trained.");
@@ -32,7 +36,7 @@ namespace DecisionTree.Source.Tree
             var classCounts = dataTable.GetClassCounts();
             var root = new DecisionTreeNode();
 
-            this.columnNames = dataTable.ColumnNames;
+            this.columnNames = dataTable.Dimensions;
             this.mostFrequentClassLabel = classCounts.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
             this.rooteNode = train(dataTable, root);
             this.IsTrained = true;
@@ -47,18 +51,23 @@ namespace DecisionTree.Source.Tree
             }
             else
             {
-                var splittingColumn = dataTable.DecideSplittingParams();
-                Console.WriteLine($"Splitting column: {splittingColumn.Item2}");
-                var attributeValueCounts = dataTable.GetAttributeCountsForColumn(splittingColumn.Item1);
-                root.SplittingColumn = splittingColumn;
-                foreach (var valueCount in attributeValueCounts)
+                var splitParams = dataTable.DecideSplitParams();
+                Console.WriteLine($"Splitting column: {splitParams.Dimension}");
+                var valueCounts = dataTable.GetValueCountsForDimension(splitParams.DimensionIndex);
+                root.SplitDetails = splitParams;
+                var prunedTable = dataTable.Split(splitParams.DimensionIndex, splitParams.Value);
+                if (!prunedTable.IsEmpty)
                 {
-                    var prunedTable = dataTable.PruneTable(splittingColumn.Item1, valueCount.Key);
+                    root.AddChild(splitParams.Value, )
+                }
+                foreach (var value in valueCounts)
+                {
+                    var prunedTable = dataTable.Split(splitParams.DimensionIndex, value.Key);
                     Console.WriteLine(prunedTable.ToString());
                     if (!prunedTable.IsEmpty)
                     {
                         var childNode = new DecisionTreeNode();
-                        root.AddChild(valueCount.Key, train(prunedTable, childNode));
+                        root.AddChild(value.Key, train(prunedTable, childNode));
                     }
                 }
                 return root;
@@ -91,6 +100,10 @@ namespace DecisionTree.Source.Tree
 
         private string predict(DataRow dataRow, DecisionTreeNode root)
         {
+            if (dataRow == null)
+            {
+                throw new ArgumentNullException(nameof(dataRow));
+            }
             if (!IsTrained)
             {
                 throw new InvalidOperationException("DecisionTree cannot predict without being trained");
@@ -101,13 +114,7 @@ namespace DecisionTree.Source.Tree
                 return root.ClassLabel;
             }
 
-            var attributeValue = dataRow.GetAttributeAtIndex(root.SplittingColumnIndex);
-
-            //if (root.HasChild(attributeValue))
-            //{
-            //    return predict(dataRow, root.GetChild(attributeValue));
-            //}
-            //return mostFrequentClassLabel;
+            var attributeValue = dataRow.GetValueAtIndex(root.SplitDimensionIndex);
             return (root.HasChild(attributeValue))
                 ? predict(dataRow, root.GetChild(attributeValue))
                 : mostFrequentClassLabel;

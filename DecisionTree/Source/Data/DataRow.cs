@@ -34,7 +34,7 @@ namespace DecisionTree.Source.Data
             }
         }
 
-        public string GetAttributeAtIndex(int index)
+        public string GetValueAtIndex(int index)
         {
             return data[index];
         }

@@ -5,6 +5,7 @@ namespace DecisionTree.Tests.Data
     #region Using
     using DecisionTree.Source.Data;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Source.Utils;
     using System;
     using System.Collections.Generic;
     #endregion
@@ -19,8 +20,8 @@ namespace DecisionTree.Tests.Data
         {
             DataTable dataTable = getSampleData();
 
-            Assert.AreEqual(3, dataTable.ColumnCount);
-            Assert.AreEqual(6, dataTable.RowCount);
+            Assert.AreEqual(3, dataTable.DimensionCount);
+            Assert.AreEqual(6, dataTable.DataCount);
             Assert.IsTrue(0.9183d - dataTable.Entropy < 0.00001d);
             Assert.IsFalse(dataTable.IsHomogeneous);
         }
@@ -36,8 +37,8 @@ namespace DecisionTree.Tests.Data
             dataRows.Add(row2);
             DataTable dataTable = new DataTable(columnNames, dataRows);
 
-            Assert.AreEqual(4, dataTable.ColumnCount);
-            Assert.AreEqual(2, dataTable.RowCount);
+            Assert.AreEqual(4, dataTable.DimensionCount);
+            Assert.AreEqual(2, dataTable.DataCount);
             Assert.AreEqual(0.0d, dataTable.Entropy);
             Assert.IsTrue(dataTable.IsHomogeneous);
         }
@@ -53,8 +54,8 @@ namespace DecisionTree.Tests.Data
             dataRows.Add(row2);
             DataTable dataTable = new DataTable(columnNames, dataRows);
 
-            Assert.AreEqual(2, dataTable.ColumnCount);
-            Assert.AreEqual(2, dataTable.RowCount);
+            Assert.AreEqual(2, dataTable.DimensionCount);
+            Assert.AreEqual(2, dataTable.DataCount);
             Assert.AreEqual(1.0d, dataTable.Entropy);
             Assert.IsFalse(dataTable.IsHomogeneous);
         }
@@ -86,13 +87,13 @@ namespace DecisionTree.Tests.Data
             DataTable dataTable = getSampleData();
 
             DataTable twitterTable = dataTable.PruneTable("Network", "twitter");
-            Assert.AreEqual(4, twitterTable.RowCount);
-            Assert.AreEqual(2, twitterTable.ColumnCount);
+            Assert.AreEqual(4, twitterTable.DataCount);
+            Assert.AreEqual(2, twitterTable.DimensionCount);
             Assert.IsTrue(twitterTable.IsHomogeneous);
 
             DataTable facebookTable = dataTable.PruneTable("Network", "facebook");
-            Assert.AreEqual(2, facebookTable.RowCount);
-            Assert.AreEqual(2, facebookTable.ColumnCount);
+            Assert.AreEqual(2, facebookTable.DataCount);
+            Assert.AreEqual(2, facebookTable.DimensionCount);
             Assert.IsTrue(facebookTable.IsHomogeneous);
 
             try
@@ -105,19 +106,19 @@ namespace DecisionTree.Tests.Data
                 Assert.IsInstanceOfType(e, typeof(ArgumentOutOfRangeException));
             }
 
-            DataTable ipodTable = dataTable.PruneTable(0, "ipod");
-            Assert.AreEqual(3, ipodTable.RowCount);
-            Assert.AreEqual(2, ipodTable.ColumnCount);
+            DataTable ipodTable = dataTable.Split(0, "ipod");
+            Assert.AreEqual(3, ipodTable.DataCount);
+            Assert.AreEqual(2, ipodTable.DimensionCount);
             Assert.IsTrue(ipodTable.IsHomogeneous);
 
-            DataTable ipodTwitterTbale = twitterTable.PruneTable(0, "ipod");
-            Assert.AreEqual(3, ipodTwitterTbale.RowCount);
-            Assert.AreEqual(1, ipodTwitterTbale.ColumnCount);
+            DataTable ipodTwitterTbale = twitterTable.Split(0, "ipod");
+            Assert.AreEqual(3, ipodTwitterTbale.DataCount);
+            Assert.AreEqual(1, ipodTwitterTbale.DimensionCount);
             Assert.IsTrue(ipodTwitterTbale.IsHomogeneous);
 
-            DataTable iPhoneTwitterTable = twitterTable.PruneTable(0, "iphone");
-            Assert.AreEqual(1, iPhoneTwitterTable.RowCount);
-            Assert.AreEqual(1, iPhoneTwitterTable.ColumnCount);
+            DataTable iPhoneTwitterTable = twitterTable.Split(0, "iphone");
+            Assert.AreEqual(1, iPhoneTwitterTable.DataCount);
+            Assert.AreEqual(1, iPhoneTwitterTable.DimensionCount);
             Assert.IsTrue(ipodTable.IsHomogeneous);
         }
 
@@ -137,7 +138,7 @@ namespace DecisionTree.Tests.Data
 
             try
             {
-                DataTable classPrunedTable = dataTable.PruneTable(dataTable.ColumnCount - 1, "no");
+                DataTable classPrunedTable = dataTable.Split(dataTable.DimensionCount - 1, "no");
                 Assert.Fail();
             }
             catch (Exception e)
@@ -153,6 +154,14 @@ namespace DecisionTree.Tests.Data
             IDictionary<string, int> classCounts = dataTable.GetClassCounts();
             Assert.AreEqual(4, classCounts["no"]);
             Assert.AreEqual(2, classCounts["yes"]);
+        }
+
+        [TestMethod]
+        public void TestDecideSplittingParams()
+        {
+            DataTable dataTable = FileInputParser.ReadDataTableFromFile()
+            var splittingParams = dataTable.DecideSplitParams();
+            Console.WriteLine(splittingParams);
         }
         #endregion
 
