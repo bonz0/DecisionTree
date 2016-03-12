@@ -52,23 +52,16 @@ namespace DecisionTree.Source.Tree
             else
             {
                 var splitParams = dataTable.DecideSplitParams();
-                Console.WriteLine($"Splitting column: {splitParams.Dimension}");
-                var valueCounts = dataTable.GetValueCountsForDimension(splitParams.DimensionIndex);
                 root.SplitDetails = splitParams;
-                var prunedTable = dataTable.Split(splitParams.DimensionIndex, splitParams.Value);
-                if (!prunedTable.IsEmpty)
+                var tableSplit = dataTable.Split(splitParams.DimensionIndex, splitParams.Value);
+                if (!tableSplit.SplitTable.IsEmpty)
                 {
-                    root.AddChild(splitParams.Value, )
+                    var firstChildNode = train(tableSplit.SplitTable, new DecisionTreeNode());
+                    root.FirstChildDetails = new Tuple<string, DecisionTreeNode>(splitParams.Value, firstChildNode);
                 }
-                foreach (var value in valueCounts)
+                if (!tableSplit.UnSplitTable.IsEmpty)
                 {
-                    var prunedTable = dataTable.Split(splitParams.DimensionIndex, value.Key);
-                    Console.WriteLine(prunedTable.ToString());
-                    if (!prunedTable.IsEmpty)
-                    {
-                        var childNode = new DecisionTreeNode();
-                        root.AddChild(value.Key, train(prunedTable, childNode));
-                    }
+                    root.SecondChild = train(tableSplit.UnSplitTable, new DecisionTreeNode());
                 }
                 return root;
             }
@@ -115,6 +108,14 @@ namespace DecisionTree.Source.Tree
             }
 
             var attributeValue = dataRow.GetValueAtIndex(root.SplitDimensionIndex);
+            if (root.HasFirstChild(attributeValue))
+            {
+                return predict(dataRow, root.FirstChildDetails.Item2);
+            }
+            else
+            {
+
+            }
             return (root.HasChild(attributeValue))
                 ? predict(dataRow, root.GetChild(attributeValue))
                 : mostFrequentClassLabel;

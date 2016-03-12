@@ -8,13 +8,15 @@ namespace DecisionTree.Source.Tree
     {
         private string classLabel;
         private SplitParams splitDetails;
-        Dictionary<string, DecisionTreeNode> children;
+        Tuple<string, DecisionTreeNode> firstChildDetails;
+        DecisionTreeNode secondChild;
 
         public DecisionTreeNode()
         {
-            this.children = new Dictionary<string, DecisionTreeNode>();
             this.splitDetails = null;
             this.classLabel = null;
+            this.firstChildDetails = null;
+            this.secondChild = null;
         }
 
         public string ClassLabel
@@ -30,9 +32,9 @@ namespace DecisionTree.Source.Tree
             }
         }
 
-        public SplitParams SplitDetails
+        internal SplitParams SplitDetails
         {
-            private get
+            get
             {
                 return splitDetails;
             }
@@ -67,27 +69,40 @@ namespace DecisionTree.Source.Tree
             }
         }
 
-        public bool HasChildren
+        internal Tuple<string, DecisionTreeNode> FirstChildDetails
         {
             get
             {
-                return (children.Count != 0);
+                return firstChildDetails;
+            }
+
+            set
+            {
+                firstChildDetails = value;
             }
         }
 
-        public DecisionTreeNode GetChild(string attributeName)
+        internal DecisionTreeNode SecondChild
         {
-            return children[attributeName];
+            get
+            {
+                return secondChild;
+            }
+
+            set
+            {
+                secondChild = value;
+            }
         }
 
-        public bool HasChild(string attributename)
+        public bool HasFirstChild(string value)
         {
-            return children.ContainsKey(attributename);
+            return firstChildDetails.Item1.Equals(value);
         }
 
-        public void AddChild(string attributeValue, DecisionTreeNode childNode)
+        public void SetFirstChildDetails(string value, DecisionTreeNode firstChild)
         {
-            this.children.Add(attributeValue, childNode);
+            this.firstChildDetails = new Tuple<string, DecisionTreeNode>(value, firstChild);
         }
     }
 }

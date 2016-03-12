@@ -161,26 +161,33 @@
             return dimensions[dimensionIndex];
         }
 
-        internal DataTable PruneTable(string dimension, string value)
+        internal DataTableSplit PruneTable(string dimension, string value)
         {
             var columnIndex = dimensions.IndexOf(dimension);
             return Split(columnIndex, value);
         }
 
-        internal DataTable Split(int dimensionIndex, string value)
+        internal DataTableSplit Split(int dimensionIndex, string value)
         {
             if (dimensionIndex == DimensionCount - 1)
             {
                 throw new ArgumentException("Cannot prune DataTable based on the class.");
             }
-            var dataWithValue = dataRows
+            var splitData = dataRows
                 .Where(r => r.GetValueAtIndex(dimensionIndex).Equals(value))
                 .Select(d => d.RemoveAttributeAt(dimensionIndex))
                 .ToList();
+            var splitDimensions = new List<string>(dimensions);
+            splitDimensions.RemoveAt(dimensionIndex);
+            var splitTable = new DataTable(splitDimensions, splitData);
 
-            var clonedDimensions = new List<string>(dimensions);
-            clonedDimensions.RemoveAt(dimensionIndex);
-            return new DataTable(clonedDimensions, dataWithValue);
+            var unSplitData = dataRows
+                .Where(r => !r.GetValueAtIndex(dimensionIndex).Equals(value))
+                .ToList();
+            var unSplitDimensions = new List<string>(dimensions);
+            var unSplitTable = new DataTable(unSplitDimensions, unSplitData);
+
+            return new DataTableSplit(splitTable, unSplitTable);
         }
 
         internal IDictionary<string, int> GetClassCounts()
