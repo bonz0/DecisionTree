@@ -69,13 +69,16 @@ namespace DecisionTree.Source.Tree
             }
         }
 
-        internal Tuple<string, DecisionTreeNode> FirstChildDetails
+        internal DecisionTreeNode FirstChild
         {
             get
             {
-                return firstChildDetails;
+                return firstChildDetails.Item2;
             }
+        }
 
+        internal Tuple<string, DecisionTreeNode> FirstChildDetails
+        {
             set
             {
                 firstChildDetails = value;

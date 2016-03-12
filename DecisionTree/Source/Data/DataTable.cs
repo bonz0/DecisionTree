@@ -173,21 +173,14 @@
             {
                 throw new ArgumentException("Cannot prune DataTable based on the class.");
             }
-            var splitData = dataRows
-                .Where(r => r.GetValueAtIndex(dimensionIndex).Equals(value))
-                .Select(d => d.RemoveAttributeAt(dimensionIndex))
-                .ToList();
-            var splitDimensions = new List<string>(dimensions);
-            splitDimensions.RemoveAt(dimensionIndex);
-            var splitTable = new DataTable(splitDimensions, splitData);
 
+            var prunedTable = pruneTable(dimensionIndex, value);
             var unSplitData = dataRows
                 .Where(r => !r.GetValueAtIndex(dimensionIndex).Equals(value))
                 .ToList();
             var unSplitDimensions = new List<string>(dimensions);
             var unSplitTable = new DataTable(unSplitDimensions, unSplitData);
-
-            return new DataTableSplit(splitTable, unSplitTable);
+            return new DataTableSplit(prunedTable, unSplitTable);
         }
 
         internal IDictionary<string, int> GetClassCounts()
@@ -206,7 +199,7 @@
             return counts;
         }
 
-        internal SplitParams DecideSplitParams()
+        public SplitParams DecideSplitParams()
         {
             var minDimensionEntropy = double.MaxValue;
             SplitParams splitParams = null;
@@ -218,7 +211,7 @@
                 var minValueEntropy = double.MaxValue;
                 foreach (var value in valueCounts.Keys)
                 {
-                    var prunedTable = Split(i, value);
+                    var prunedTable = pruneTable(i, value);
                     var prunedTableEntropy = prunedTable.Entropy;
                     var valueCount = (double)valueCounts[value];
                     var sizeOfCurrentTable = (double)DataCount;
@@ -228,7 +221,6 @@
                         minEntropyValue = value;
                     }
                 }
-
                 if (dimensionEntropy <= minDimensionEntropy)
                 {
                     minDimensionEntropy = dimensionEntropy;
@@ -279,6 +271,17 @@
         #endregion
 
         #region PrivateMethods
+        private DataTable pruneTable(int dimensionIndex, string value)
+        {
+            var splitData = dataRows
+                .Where(r => r.GetValueAtIndex(dimensionIndex).Equals(value))
+                .Select(d => d.RemoveAttributeAt(dimensionIndex))
+                .ToList();
+            var splitDimensions = new List<string>(dimensions);
+            splitDimensions.RemoveAt(dimensionIndex);
+            return new DataTable(splitDimensions, splitData);
+        }
+
         private void validateArgs(int numColumns, IEnumerable<DataRow> dataRows)
         {
             if (dataRows.Any(d => d.Count != numColumns))

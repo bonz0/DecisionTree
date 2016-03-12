@@ -48,6 +48,7 @@
     <Compile Include="Source\Data\DataRow.cs" />
     <Compile Include="Source\Data\DataTable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\Data\DataTableSplit.cs" />
     <Compile Include="Source\Data\SplitParams.cs" />
     <Compile Include="Source\Tree\DecisionTree.cs" />
     <Compile Include="Source\Tree\DecisionTreeNode.cs" />

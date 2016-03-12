@@ -102,23 +102,27 @@ namespace DecisionTree.Source.Tree
                 throw new InvalidOperationException("DecisionTree cannot predict without being trained");
             }
 
+            /// If this node is a leaf node, then we have a successful prediction.
             if (root.IsLeaf)
             {
                 return root.ClassLabel;
             }
 
-            var attributeValue = dataRow.GetValueAtIndex(root.SplitDimensionIndex);
-            if (root.HasFirstChild(attributeValue))
+            /// Get the split dimension's value and see if first child has that 
+            /// value, if it does, then recurse into the first child to predict.
+            var value = dataRow.GetValueAtIndex(root.SplitDimensionIndex);
+            if (root.HasFirstChild(value))
             {
-                return predict(dataRow, root.FirstChildDetails.Item2);
+                return predict(dataRow, root.FirstChild);
             }
-            else
+            /// If the first child's value doesn't match, then see if second child
+            /// exists. If it does, then recurse into second child to predict.
+            else if (root.SecondChild != null)
             {
-
+                return predict(dataRow, root.SecondChild);
             }
-            return (root.HasChild(attributeValue))
-                ? predict(dataRow, root.GetChild(attributeValue))
-                : mostFrequentClassLabel;
+            /// If the seecond doesn't exist, then predict the most frequest class label.
+            return mostFrequentClassLabel;
         }
     }
 }

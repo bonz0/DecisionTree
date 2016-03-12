@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DecisionTree.Source.Data
 {
-    internal class SplitParams
+    public class SplitParams
     {
         private int dimensionIndex;
         private string dimension;
