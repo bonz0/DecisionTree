@@ -11,7 +11,6 @@ namespace Runner
         {
             var trainingData = FileInputParser.ReadDataTableFromFile(@"C:\Users\fazia\Documents\DecisionTree\DecisionTree\DecisionTree\TestData\RestaurantTrainData.csv", ',');
             var testingData = FileInputParser.ReadDataTableFromFile(@"C:\Users\fazia\Documents\DecisionTree\DecisionTree\DecisionTree\TestData\RestaurantTestData.csv", ',');
-            //Console.WriteLine("First splittin column: " + trainingData.DecideSplitParams().Dimension);
             var decisionTree = new DecisionTree.Source.Tree.DecisionTree();
             decisionTree.Train(trainingData);
             IList<string> predictions = decisionTree.Predict(testingData);
